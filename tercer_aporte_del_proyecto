@@ -1,0 +1,36 @@
+private static void mostrarEstado() {
+        System.out.println("\nEstado actual de las varillas:");
+        for (int i = 0; i < 3; i++) {
+            System.out.print("Varilla " + (i + 1) + ": ");
+            for (int j = 0; j <= tope[i]; j++) {
+                System.out.print(varillas[i][j] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println(); // Espacio adicional para mejor legibilidad
+    }
+
+    private static boolean moverDisco(int origen, int destino) {
+        // Validar las varillas de origen y destino
+        if (origen < 0 || origen > 2 || destino < 0 || destino > 2) {
+            return false; // Varilla inválida
+        }
+        if (tope[origen] == -1) {
+            return false; // No hay discos en la varilla de origen
+        }
+        
+        // Obtener el disco que se va a mover
+        int discoMovido = varillas[origen][tope[origen]];
+        
+        // Validar si el movimiento es permitido
+        if (tope[destino] != -1 && varillas[destino][tope[destino]] < discoMovido) {
+            return false; 
+        }
+
+        // Mover disco
+        tope[origen]--;
+        tope[destino]++;
+        varillas[destino][tope[destino]] = discoMovido;
+        return true; // Indicar que el movimiento fue exitoso
+    }
+}
