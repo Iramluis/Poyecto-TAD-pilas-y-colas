@@ -1,0 +1,24 @@
+private static void inicializarVarillas() {
+        // Inicializa la varilla 1 con los discos en un orden aleatorio
+        int[] discos = new int[NUM_DISCOS];
+        for (int i = 0; i < NUM_DISCOS; i++) {
+            discos[i] = i + 1; 
+        }
+        mezclarDiscos(discos); // Mezclar los discos
+
+        // Apilar los discos en la varilla 1
+        for (int i = 0; i < NUM_DISCOS; i++) {
+            varillas[0][i] = discos[i]; // Discos en la varilla 1
+        }
+    }
+
+    private static void mezclarDiscos(int[] discos) {
+        Random random = new Random();
+        for (int i = discos.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1); // Generar un índice aleatorio
+            // Intercambiar discos[i] con el elemento en el índice aleatorio
+            int temp = discos[i];
+            discos[i] = discos[j];
+            discos[j] = temp;
+        }
+    }
