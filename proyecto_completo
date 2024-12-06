@@ -1,0 +1,195 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.Random;
+import java.util.Scanner;
+
+class Jugador {
+    private String nombre;
+    private int score;
+
+    public Jugador(String nombre, int score) {
+        this.nombre = nombre;
+        this.score = score;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public int getScore() {
+        return score;
+    }
+}
+
+public class TorresDeHanoi {
+    private static int[][] varillas = new int[3][6];
+    private static int[] tope = {5, -1, -1}; // tope de cada varilla
+    private static final int NUM_DISCOS = 6;
+    private static int turnos = 0; // Contador de turnos
+    private static final int MAX_JUGADORES = 100; // Máximo número de jugadores
+    private static Jugador[] jugadores = new Jugador[MAX_JUGADORES]; // Arreglo para almacenar jugadores
+    private static int numJugadores = 0; // Contador de jugadores
+
+    public static void main(String[] args) {
+        try {
+            inicializarVarillas();
+            Scanner scanner = new Scanner(System.in);
+            
+            while (true) {
+                mostrarEstado();
+                System.out.print("Ingresa el número de la varilla de origen (1-3) o 0 para salir: ");
+                int origen = scanner.nextInt();
+                if (origen == 0) break; // Salir del juego
+                System.out.print("Ingresa el número de la varilla de destino (1-3) o -1 para no mover: ");
+                int destino = scanner.nextInt();
+
+                // Si el usuario decide no mover, simplemente continúa
+                if (destino == -1) {
+                    System.out.println("No se ha realizado ningún movimiento.");
+                    continue;
+                }
+
+                // Intentar mover el disco
+                if (moverDisco(origen - 1, destino - 1)) {
+                    turnos++; // Incrementar el contador de turnos
+                    // Comprobar si se ha completado el juego
+                    if (tope[2] == 5) { // Si la varilla 3 tiene todos los discos
+                        mostrarEstado();
+                        System.out.println("¡Felicidades! Has completado el juego en " + turnos + " turnos.");
+                        guardarNombreYScore(scanner);
+                        break;
+                    }
+                } else {
+                    System.out.println("Movimiento inválido. Intenta de nuevo.");
+                }
+            }
+            scanner.close();
+        } catch (IOException e) {
+            System.out.println("Error en la entrada/salida: " + e.getMessage());
+        }
+    }
+
+    private static void guardarNombreYScore(Scanner scanner) throws IOException {
+        System.out.print("Ingresa tu nombre: ");
+        String nombre = scanner.next();
+        String archivo = "scores.txt";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(archivo, true))) {
+            writer.write(nombre + "," + turnos);
+            writer.newLine();
+        }
+
+
+        if (numJugadores < MAX_JUGADORES) {
+            jugadores[numJugadores++] = new Jugador(nombre, turnos);
+        }
+
+        ordenarScores(archivo);
+        mostrarTablaPuntuaciones(); // Muestra la tabla de puntuaciones después de guardar
+    }
+
+    private static void ordenarScores(String archivo) throws IOException {
+        // Leer los jugadores del archivo
+        try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            int index = 0;
+            while ((linea = reader.readLine()) != null && index < MAX_JUGADORES) {
+                String[] partes = linea.split(",");
+                String nombre = partes[0];
+                int score = Integer.parseInt(partes[1]);
+                jugadores[index++] = new Jugador(nombre, score);
+            }
+            
+            numJugadores = index; 
+        }
+        for (int i = 0; i < numJugadores - 1; i++) {
+            for (int j = 0; j < numJugadores - i - 1; j++) {
+                if (jugadores[j].getScore() < jugadores[j + 1].getScore()) {
+                    Jugador temp = jugadores[j];
+                    jugadores[j] = jugadores[j + 1];
+                    jugadores[j + 1] = temp;
+                }
+            }
+        }
+
+        // Escribir los jugadores ordenados de nuevo en el archivo
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(archivo))) {
+            for (int i = 0; i < numJugadores; i++) {
+                writer.write(jugadores[i].getNombre() + "," + jugadores[i].getScore());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.out.println("Error al escribir el archivo: " + e.getMessage());
+        }
+    }
+
+    private static void mostrarTablaPuntuaciones() {
+        System.out.println("Tabla de Puntuaciones:");
+        for (int i = 0; i < numJugadores; i++) {
+            System.out.println((i + 1) + ". " + jugadores[i].getNombre() + " - " + jugadores[i].getScore());
+        }
+    }
+
+    private static void inicializarVarillas() {
+        // Inicializa la varilla 1 con los discos en un orden aleatorio
+        int[] discos = new int[NUM_DISCOS];
+        for (int i = 0; i < NUM_DISCOS; i++) {
+            discos[i] = i + 1; 
+        }
+        mezclarDiscos(discos); // Mezclar los discos
+
+        // Apilar los discos en la varilla 1
+        for (int i = 0; i < NUM_DISCOS; i++) {
+            varillas[0][i] = discos[i]; // Discos en la varilla 1
+        }
+    }
+
+    private static void mezclarDiscos(int[] discos) {
+        Random random = new Random();
+        for (int i = discos.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1); // Generar un índice aleatorio
+            // Intercambiar discos[i] con el elemento en el índice aleatorio
+            int temp = discos[i];
+            discos[i] = discos[j];
+            discos[j] = temp;
+        }
+    }
+
+    private static void mostrarEstado() {
+        System.out.println("\nEstado actual de las varillas:");
+        for (int i = 0; i < 3; i++) {
+            System.out.print("Varilla " + (i + 1) + ": ");
+            for (int j = 0; j <= tope[i]; j++) {
+                System.out.print(varillas[i][j] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println(); // Espacio adicional para mejor legibilidad
+    }
+
+    private static boolean moverDisco(int origen, int destino) {
+        // Validar las varillas de origen y destino
+        if (origen < 0 || origen > 2 || destino < 0 || destino > 2) {
+            return false; // Varilla inválida
+        }
+        if (tope[origen] == -1) {
+            return false; // No hay discos en la varilla de origen
+        }
+        
+        // Obtener el disco que se va a mover
+        int discoMovido = varillas[origen][tope[origen]];
+        
+        // Validar si el movimiento es permitido
+        if (tope[destino] != -1 && varillas[destino][tope[destino]] < discoMovido) {
+            return false; 
+        }
+
+        // Mover disco
+        tope[origen]--;
+        tope[destino]++;
+        varillas[destino][tope[destino]] = discoMovido;
+        return true; // Indicar que el movimiento fue exitoso
+    }
+}
